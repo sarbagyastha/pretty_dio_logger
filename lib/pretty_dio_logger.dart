@@ -60,11 +60,9 @@ class PrettyDioLogger extends Interceptor {
     if (requestHeader) {
       _printMapAsTable(options.queryParameters, header: 'Query Parameters');
       final requestHeaders = Map();
-      if (options.headers != null) {
-        requestHeaders.addAll(options.headers);
-      }
+      requestHeaders.addAll(options.headers);
       requestHeaders['contentType'] = options.contentType?.toString();
-      requestHeaders['responseType'] = options.responseType?.toString();
+      requestHeaders['responseType'] = options.responseType.toString();
       requestHeaders['followRedirects'] = options.followRedirects;
       requestHeaders['connectTimeout'] = options.connectTimeout;
       requestHeaders['receiveTimeout'] = options.receiveTimeout;
@@ -92,14 +90,14 @@ class PrettyDioLogger extends Interceptor {
   Future onError(DioError err) async {
     if (error) {
       if (err.type == DioErrorType.RESPONSE) {
-        final uri = err.response.request.uri;
+        final uri = err.response?.request.uri;
         _printBoxed(
             header:
-                'DioError ║ Status: ${err.response.statusCode} ${err.response.statusMessage}',
+                'DioError ║ Status: ${err.response?.statusCode} ${err.response?.statusMessage}',
             text: uri.toString());
-        if (err.response != null && err.response.data != null) {
+        if (err.response != null && err.response!.data != null) {
           logPrint('╔ ${err.type.toString()}');
-          _printResponse(err.response);
+          _printResponse(err.response!);
         }
         _printLine('╚');
         logPrint('');
@@ -130,7 +128,7 @@ class PrettyDioLogger extends Interceptor {
     return response;
   }
 
-  void _printBoxed({String header, String text}) {
+  void _printBoxed({required String header, required String text}) {
     logPrint('');
     logPrint('╔╣ $header');
     logPrint('║  $text');
@@ -151,7 +149,7 @@ class PrettyDioLogger extends Interceptor {
   }
 
   void _printResponseHeader(Response response) {
-    final uri = response?.request?.uri;
+    final uri = response.request.uri;
     final method = response.request.method;
     _printBoxed(
         header:
@@ -160,8 +158,8 @@ class PrettyDioLogger extends Interceptor {
   }
 
   void _printRequestHeader(RequestOptions options) {
-    final uri = options?.uri;
-    final method = options?.method;
+    final uri = options.uri;
+    final method = options.method;
     _printBoxed(header: 'Request ║ $method ', text: uri.toString());
   }
 
@@ -202,8 +200,8 @@ class PrettyDioLogger extends Interceptor {
       final isLast = index == data.length - 1;
       var value = data[key];
 //      key = '\"$key\"';
-	    if (value is String)
-		    value = '\"${value.toString().replaceAll(RegExp(r'(\r|\n)+'), " ")}\"';
+      if (value is String)
+        value = '\"${value.toString().replaceAll(RegExp(r'(\r|\n)+'), " ")}\"';
       if (value is Map) {
         if (compact && _canFlattenMap(value))
           logPrint('║${_indent(tabs)} $key: $value${!isLast ? ',' : ''}');
@@ -259,7 +257,7 @@ class PrettyDioLogger extends Interceptor {
     return (list.length < 10 && list.toString().length < maxWidth);
   }
 
-  void _printMapAsTable(Map map, {String header}) {
+  void _printMapAsTable(Map? map, {String? header}) {
     if (map == null || map.isEmpty) return;
     logPrint('╔ $header ');
     map.forEach((key, value) => _printKV(key, value));
