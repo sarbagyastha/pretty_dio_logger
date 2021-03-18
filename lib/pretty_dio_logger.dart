@@ -1,6 +1,5 @@
 library pretty_dio_logger;
 
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
@@ -53,7 +52,10 @@ class PrettyDioLogger extends Interceptor {
       this.logPrint = print});
 
   @override
-  Future onRequest(RequestOptions options) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler interceptorHandler,
+  ) {
     if (request) {
       _printRequestHeader(options);
     }
@@ -82,15 +84,14 @@ class PrettyDioLogger extends Interceptor {
           _printBlock(data.toString());
       }
     }
-
-    return options;
+    interceptorHandler.next(options);
   }
 
   @override
-  Future onError(DioError err) async {
+  void onError(DioError err, ErrorInterceptorHandler interceptorHandler) {
     if (error) {
       if (err.type == DioErrorType.response) {
-        final uri = err.response?.request.uri;
+        final uri = err.response?.requestOptions.uri;
         _printBoxed(
             header:
                 'DioError ║ Status: ${err.response?.statusCode} ${err.response?.statusMessage}',
@@ -104,11 +105,12 @@ class PrettyDioLogger extends Interceptor {
       } else
         _printBoxed(header: 'DioError ║ ${err.type}', text: err.message);
     }
-    return err;
+    interceptorHandler.next(err);
   }
 
   @override
-  Future onResponse(Response response) async {
+  void onResponse(
+      Response response, ResponseInterceptorHandler interceptorHandler) {
     _printResponseHeader(response);
     if (responseHeader) {
       final responseHeaders = Map<String, String>();
@@ -125,7 +127,7 @@ class PrettyDioLogger extends Interceptor {
       _printLine('╚');
     }
 
-    return response;
+    interceptorHandler.next(response);
   }
 
   void _printBoxed({required String header, required String text}) {
@@ -149,8 +151,8 @@ class PrettyDioLogger extends Interceptor {
   }
 
   void _printResponseHeader(Response response) {
-    final uri = response.request.uri;
-    final method = response.request.method;
+    final uri = response.requestOptions.uri;
+    final method = response.requestOptions.method;
     _printBoxed(
         header:
             'Response ║ $method ║ Status: ${response.statusCode} ${response.statusMessage}',
